@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BUS 500 — Study Hub</title>
+<title>MBA Study Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -145,20 +145,96 @@
     .content-card { padding: 20px 18px; }
     .nav-btn { padding: 6px 10px; font-size: 12px; }
   }
+  /* ── Auth overlay ── */
+  .auth-overlay { position: fixed; inset: 0; background: rgba(26,29,46,0.88); z-index: 2000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+  .auth-card { background: #fff; border-radius: 20px; padding: 36px 32px; width: 100%; max-width: 380px; box-shadow: 0 24px 64px rgba(0,0,0,0.28); }
+  .auth-logo { font-size: 22px; font-weight: 800; color: var(--accent); text-align: center; margin-bottom: 4px; }
+  .auth-tagline { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 24px; line-height: 1.5; }
+  .auth-tabs { display: flex; background: var(--surface2); border-radius: 10px; padding: 3px; margin-bottom: 20px; gap: 0; }
+  .auth-tab { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; transition: all 0.15s; }
+  .auth-tab.active { background: #fff; color: var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .auth-input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; margin-bottom: 12px; outline: none; transition: border-color 0.15s; display: block; box-sizing: border-box; }
+  .auth-input:focus { border-color: var(--accent); }
+  .auth-err { background: var(--red-light); color: #a01c1c; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .auth-ok { background: var(--green-light); color: #1a7a4a; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .auth-forgot { text-align: right; font-size: 12px; color: var(--accent); cursor: pointer; margin-top: -4px; margin-bottom: 14px; font-weight: 600; }
+  /* ── Topbar user badge ── */
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .signout-btn { font-size: 12px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 600; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+  .signout-btn:hover { color: var(--red); background: var(--red-light); }
+  /* ── MBA Dashboard ── */
+  .course-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+  @media (max-width: 500px) { .course-grid { grid-template-columns: 1fr; } }
+  .course-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .course-card:hover:not(.soon) { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+  .course-card.soon { opacity: 0.55; cursor: default; }
+  .course-emoji { font-size: 28px; margin-bottom: 10px; }
+  .course-code { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 3px; }
+  .course-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .course-semester { font-size: 11px; color: var(--text2); margin-bottom: 8px; font-weight: 600; }
+  .course-pct { font-size: 22px; font-weight: 800; }
+  .course-bar { height: 4px; background: var(--surface2); border-radius: 10px; overflow: hidden; margin-top: 8px; }
+  .course-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s; }
+  .soon-badge { position: absolute; top: 12px; right: 12px; background: var(--surface2); color: var(--text3); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; }
 </style>
 </head>
 <body>
+<!-- ══ AUTH OVERLAY ══ -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">🎓 MBA Study Hub</div>
+    <div class="auth-tagline">Sign in to sync your progress across every device on your journey to the MBA.</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-signin" onclick="authTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="authTab('signup')">Create Account</button>
+    </div>
+    <div id="auth-msg" style="display:none"></div>
+    <div id="panel-signin">
+      <input class="auth-input" type="email" id="si-email" placeholder="Email address" autocomplete="email">
+      <input class="auth-input" type="password" id="si-pass" placeholder="Password" autocomplete="current-password">
+      <div class="auth-forgot" onclick="forgotPassword()">Forgot password?</div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doSignIn()">Sign In →</button>
+    </div>
+    <div id="panel-signup" style="display:none">
+      <input class="auth-input" type="email" id="su-email" placeholder="Email address" autocomplete="email">
+      <input class="auth-input" type="password" id="su-pass" placeholder="Password (min 6 characters)" autocomplete="new-password">
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doSignUp()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
   <header class="topbar">
-    <div class="topbar-logo">BUS<span>500</span></div>
+    <div class="topbar-logo">🎓 <span>MBA Hub</span></div>
     <nav class="topbar-nav">
-      <button class="nav-btn active" onclick="showPage('home')" id="nav-home">🏠 Home</button>
+      <button class="nav-btn" onclick="showPage('dashboard')" id="nav-dashboard">🏠 Home</button>
+      <button class="nav-btn active" onclick="showPage('home')" id="nav-home">📚 BUS 500</button>
       <button class="nav-btn" onclick="showPage('tracker')" id="nav-tracker">📊 Tracker</button>
     </nav>
-    <div class="topbar-streak">🔥 <span id="streak-count">0</span> day</div>
+    <div class="topbar-right">
+      <div class="topbar-streak">🔥 <span id="streak-count">0</span>d</div>
+      <div class="user-avatar" id="user-avatar">?</div>
+      <button class="signout-btn" onclick="doSignOut()">Sign out</button>
+    </div>
   </header>
 
-  <main class="page active" id="page-home">
+  <!-- ══ MBA DASHBOARD ══ -->
+  <main class="page active" id="page-dashboard">
+    <div class="home-hero">
+      <h1>🎓 My MBA Journey</h1>
+      <p id="dash-greeting">Welcome! Track every course, quiz, and study session on your path to the MBA.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="num" id="dash-overall">0%</div><div class="lbl">BUS 500</div></div>
+        <div class="hero-stat"><div class="num" id="dash-quizzes">0/5</div><div class="lbl">Quizzes Done</div></div>
+        <div class="hero-stat"><div class="num" id="dash-mins">0</div><div class="lbl">Mins Studied</div></div>
+      </div>
+    </div>
+    <div class="section-label">📚 My Courses</div>
+    <div class="course-grid" id="course-grid"></div>
+  </main>
+
+  <main class="page" id="page-home">
     <div class="home-hero">
       <h1>📚 BUS 500 Study Hub</h1>
       <p>Read every unit, take quizzes, and track your exam readiness — all in one place.</p>
@@ -246,21 +322,182 @@
 
   <div class="toast-container" id="toasts"></div>
 </div>
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script>
+// ⚠️  STEP 1: Go to console.firebase.google.com
+// ⚠️  STEP 2: Create project → Add web app → copy your config here
+const firebaseConfig = {
+  apiKey:            "PASTE_YOUR_API_KEY",
+  authDomain:        "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "PASTE_YOUR_PROJECT_ID",
+  storageBucket:     "PASTE_YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "PASTE_YOUR_SENDER_ID",
+  appId:             "PASTE_YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// MBA course roster — add more as you progress
+const COURSES = [
+  { id:'bus500', code:'BUS 500', title:'Strategic Management',   emoji:'🧭', color:'#5B6EF5', semester:'Semester 1', hasContent:true  },
+  { id:'bus501', code:'BUS 501', title:'Financial Management',   emoji:'💰', color:'#22C97A', semester:'Semester 1', hasContent:false },
+  { id:'bus502', code:'BUS 502', title:'Marketing Strategy',     emoji:'📣', color:'#F59E0B', semester:'Semester 1', hasContent:false },
+  { id:'bus503', code:'BUS 503', title:'Organizational Behavior',emoji:'👥', color:'#EF4444', semester:'Semester 2', hasContent:false },
+  { id:'bus504', code:'BUS 504', title:'Managerial Economics',   emoji:'📈', color:'#8B5CF6', semester:'Semester 2', hasContent:false },
+  { id:'bus505', code:'BUS 505', title:'Business Ethics & Law',  emoji:'⚖️', color:'#0EA5E9', semester:'Semester 2', hasContent:false },
+];
+
 const UNITS=[{"id":1,"emoji":"🧭","title":"Strategic Management Foundations","subtitle":"Core concepts, processes & history","color":"#4F8EF7","sections":[{"title":"Introduction","content":"Business (or Strategic) management is the art, science, and craft of formulating, implementing and evaluating cross-functional decisions that will enable an organization to achieve its long-term objectives. It is the process of specifying the organization's mission, vision and objectives, developing policies and plans, often in terms of projects and programs, which are designed to achieve these objectives, and then allocating resources to implement the policies and plans. Strategic management seeks to coordinate and integrate the activities of the various functional areas of a business in order to achieve long-term organizational objectives. A balanced scorecard is often used to evaluate the overall performance of the business and its progress towards objectives."},{"title":"Strategy Evaluation","content":"Measuring the effectiveness of the organizational strategy, it is extremely important to conduct a SWOT analysis to figure out the strengths, weaknesses, opportunities and threats (both internal and external) of the entity in question. This may require certain precautionary measures or even change the entire strategy. In corporate strategy, Johnson and Scholes present a model in which strategic options are evaluated against three key success criteria: Suitability (would it work?), Feasibility (can it be made to work?), and Acceptability (will they work it?)."},{"title":"Suitability","content":"Suitability deals with the overall rationale of the strategy. The key point to consider is whether the strategy would address the key strategic issues underlined by the organisation's strategic position. Does it make economic sense? Would the organisation obtain economies of scale, economies of scope or experience economy? Would it be suitable in terms of environment and capabilities?"},{"title":"Feasibility","content":"Feasibility is concerned with whether the resources required to implement the strategy are available, can be developed or obtained. Resources include funding, people, time and information. Tools that can be used to evaluate feasibility include: cash flow analysis and forecasting, break-even analysis, and resource deployment analysis."},{"title":"Acceptability","content":"Acceptability is concerned with the expectations of the identified stakeholders (mainly shareholders, employees and customers) with the expected performance outcomes: return, risk and stakeholder reactions. Return deals with the benefits expected by stakeholders. Risk deals with the probability and consequences of failure of a strategy. Stakeholder reactions deals with anticipating the likely reaction of stakeholders — shareholders could oppose new shares, employees could oppose outsourcing."},{"title":"General Approaches","content":"There are two main approaches to strategic management: The Industrial Organizational Approach (based on economic theory — deals with competitive rivalry, resource allocation, economies of scale; assumptions: rationality, self-discipline, profit maximization) and The Sociological Approach (deals primarily with human interactions; assumptions: bounded rationality, satisfying behaviour, profit sub-optimality — Google is an example). Strategic management techniques can be viewed as bottom-up, top-down, or collaborative processes."},{"title":"Strategy Hierarchy","content":"Strategic management is the highest level of management — broadest, applying to all parts of the firm with the longest time horizon. Corporate strategy refers to the overarching strategy of the diversified firm (asking 'in which businesses should we compete?'). Business strategy refers to the aggregated strategies of a single business unit. Functional strategies include marketing, HR, financial, legal, and supply-chain strategies. Operational strategy deals with day-to-day operations (Peter Drucker's MBO)."},{"title":"Birth of Strategic Management","content":"Strategic management as a discipline originated in the 1950s and 60s. The most influential pioneers were Alfred D. Chandler Jr., Philip Selznick, Igor Ansoff, and Peter Drucker. Chandler recognized the importance of coordinating management under one all-encompassing strategy. Selznick introduced the idea of matching internal factors with external environmental circumstances — the core idea of SWOT analysis. Ansoff built on this, adding strategic concepts and inventing vocabulary such as the Ansoff strategy grid."},{"title":"Growth and Portfolio Theory","content":"In the 1970s much of strategic management dealt with size, growth, and portfolio theory. The PIMS study (Profit Impact of Marketing Strategies), started at General Electric, found that: The greater a company's market share, the greater will be their rate of profit. High market share provides volume, economies of scale, and learning curve advantages. BCG developed the famous growth-share matrix (Stars, Cash Cows, Dogs, Question Marks) as a portfolio management tool."},{"title":"The Japanese Challenge","content":"By the late 70s, Japanese industry had become incredibly successful across steel, watches, ship building, cameras, autos, and electronics. Key factors included higher employee morale, lower cost structures, effective government industrial policy, modernization after WWII, and superior quality control techniques such as Total Quality Management (TQM), Just In Time (JIT), and Kanban systems. This forced Western businesses to dramatically reconsider their strategies."},{"title":"Gaining Competitive Advantage","content":"Gary Hamel and C. K. Prahalad declared that strategy needs to be more active and interactive — less 'arm-chair planning'. They introduced terms like strategic intent and strategic architecture, and popularized the idea of core competency — knowing the one or two key things your company does better than anyone else, and focusing relentlessly on them. This became a cornerstone of 1980s strategic thinking."},{"title":"Key Terms — Unit 1","content":"Essential terms: Strategic management (formulating, implementing, evaluating cross-functional decisions), SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats), Balanced Scorecard (measuring overall performance), Suitability/Feasibility/Acceptability (Johnson & Scholes criteria), Industrial Organizational vs Sociological Approach, Corporate strategy vs Business strategy vs Functional strategy, Core competency (Hamel & Prahalad), Portfolio theory, BCG Matrix."}],"quiz":[{"q":"What are the three processes of strategic management?","options":["Formulation, Implementation, Evaluation","Planning, Organizing, Leading","Analysis, Design, Execution","Research, Strategy, Control"],"answer":0},{"q":"Which framework evaluates strategy options against Suitability, Feasibility, and Acceptability?","options":["SWOT Analysis","Johnson & Scholes model","Porter's Five Forces","BCG Matrix"],"answer":1},{"q":"SWOT analysis was introduced by which contributor?","options":["Michael Porter","Igor Ansoff","Philip Selznick","Alfred Chandler"],"answer":2},{"q":"Feasibility in strategy evaluation is primarily concerned with:","options":["Stakeholder reactions","Available resources to implement strategy","Market conditions","Competitor analysis"],"answer":1},{"q":"Which approach to strategic management is based on economic theory?","options":["Sociological Approach","Industrial Organizational Approach","Behavioral Approach","Systems Approach"],"answer":1},{"q":"Corporate strategy answers the question:","options":["How do we improve daily operations?","In which businesses should we compete?","How do we manage employees?","What products should we develop?"],"answer":1}]},{"id":2,"emoji":"🎯","title":"Mission, Vision & Values","subtitle":"Purpose, direction & P-O-L-C framework","color":"#34C97F","sections":[{"title":"Learning Objectives","content":"By the end of this unit you should be able to: define mission and vision; explain how values are important for mission and vision; understand the roles of vision, mission, and values in the P-O-L-C framework; and describe how mission and vision guide strategic planning. A study by Bain and Company reports that 90% of the 500 firms surveyed issue some form of mission and vision statements, and firms with clearly communicated mission and vision perform better."},{"title":"Mission Statements","content":"A mission statement communicates the organization's reason for being, and how it aims to serve its key stakeholders — customers, employees, and investors. Starbucks' mission principles include: provide a great work environment and treat each other with respect; embrace diversity as an essential component; apply the highest standards of excellence to coffee; develop enthusiastically satisfied customers; contribute positively to communities; and recognize that profitability is essential to future success."},{"title":"Vision Statements","content":"A vision statement is a future-oriented declaration of the organization's purpose and aspirations. In many ways, you can say the mission statement lays out the organization's 'purpose' and the vision lays out its aspirations. Toyota's global corporate principles include: honor the spirit of the law of every nation; respect the culture and customs of every nation; dedicate to providing clean and safe products; create and develop advanced technologies; foster a corporate culture that enhances creativity and teamwork."},{"title":"Three Critical Roles","content":"Mission and vision statements play three critical roles: (1) They communicate the purpose of the organization to stakeholders — stakeholders are those key parties who have some influence over the organization or are impacted by it. (2) They create a target for strategy development — a good strategy is measured by how well it helps the firm achieve its mission and vision. (3) They provide a high-level guide for the goals and objectives showing success or failure of the strategy."},{"title":"P-O-L-C Framework","content":"The P-O-L-C framework stands for Planning, Organizing, Leading, Controlling. Mission and vision play a prominent role in the planning facet. But their role does not stop there — they also extend to organizing (who should be hired, how to structure the firm), leading (inspiring people toward the mission), and controlling (setting and evaluating performance standards that flow from the mission)."},{"title":"Mission, Vision, and Organizing","content":"Organizing is the function of management that involves developing an organizational structure and allocating human resources. Organization design is a formal, guided process for integrating people, information, and technology. The design should reflect and support the strategy. In 2006, Disney acquired Pixar — renowned for creative prowess in animated entertainment — as a strategic alignment example. Culture and structure must align with the mission."},{"title":"Mission, Vision, and Leading","content":"Leading involves influencing others toward the attainment of organizational objectives. Steve Demos had the personal mission of replacing cow's milk with soy milk in U.S. supermarkets — this led to his vision for White Wave and its Silk soy milk line. When Walt Disney suggested building a theme park in a Florida swamp in the early 1960s, few shared his view. Eight Principles of Visionary Leadership guide how leaders translate vision into organizational reality."},{"title":"Eight Principles of Visionary Leadership","content":"1. Personal perception of societal changes from an outsider's view. 2. Never give up despite resistance; apply outside-in customer pressure with top-down instruction. 3. Revolution begins with symbolic disruption of the old system. 4. Direction of revolution illustrated by visible symbolic behavior. 5. Quickly establish new physical, organizational, and behavioral systems. 6. Real change leaders build a guiding coalition. 7. Align incentives to the new direction. 8. Institutionalize new approaches to prevent regression."},{"title":"Vision Pervading the Organization","content":"If many or most of an organization's employees understand and identify with the mission and vision, efficiency will increase because frontline workers will make decisions fully aligned with organizational goals. Efficiency is achieved with limited hands-on supervision because the mission and vision serve as a form of cruise control. Leadership must learn to trust workers and give them sufficient opportunities to develop quality decision-making skills."},{"title":"Vision, Mission, and Controlling","content":"Controlling involves ensuring that performance does not deviate from standards. It consists of three steps: (1) establishing performance standards; (2) comparing actual performance against standards; (3) taking corrective action when necessary. Mission and vision are directly and indirectly related to all three steps. It is helpful to think about metrics as leading, lagging, and pacing indicators."},{"title":"Organizational Culture","content":"Organizational culture is the workplace environment formulated from the interaction of the employees. It is defined by all of the life experiences, strengths, weaknesses, education, upbringing, and values of the employees. As you might imagine, achieving alignment between mission and vision and organizational culture can be very powerful. However, culture is difficult to change — if you are seeking to change culture, you must first understand it."},{"title":"Key Takeaway — Unit 2","content":"Mission and vision both relate to an organization's purpose and aspirations. A mission statement communicates the organization's reason for being and how it aspires to serve stakeholders. The vision statement is a narrower, future-oriented declaration of the organization's purpose and aspirations. Together, mission and vision guide strategy development, communicate purpose to stakeholders, and inform the goals and objectives set to determine whether the strategy is on track."}],"quiz":[{"q":"A mission statement primarily communicates:","options":["Future aspirations of the organization","The organization's reason for being","Financial goals","Market share targets"],"answer":1},{"q":"What does P-O-L-C stand for?","options":["Profit, Operations, Leadership, Control","Planning, Organizing, Leading, Controlling","Purpose, Objectives, Learning, Culture","Policy, Order, Leverage, Cost"],"answer":1},{"q":"A vision statement is:","options":["A current description of what the company does","A future-oriented declaration of purpose and aspirations","A financial forecast","A list of company values"],"answer":1},{"q":"Mission and vision play how many critical roles?","options":["Two","Three","Four","Five"],"answer":1},{"q":"Organizational culture is BEST defined as:","options":["The company's marketing strategy","Workplace environment shaped by employee interactions","The physical office layout","HR policies"],"answer":1},{"q":"Which company acquisition is cited as an example of cultural/strategic alignment?","options":["Apple acquiring Beats","Disney acquiring Pixar","Google acquiring YouTube","Facebook acquiring Instagram"],"answer":1}]},{"id":3,"emoji":"⚡","title":"Competitive Advantage","subtitle":"Porter's theory, value chain & supply chains","color":"#F59E0B","sections":[{"title":"Competitive Advantage Defined","content":"Competitive advantage is defined as the strategic advantage one business entity has over its rival entities within its competitive industry. Achieving competitive advantage strengthens and positions a business better within the business environment. Competitive advantage seeks to address some of the criticisms of comparative advantage. Opportunity cost in this context means the most valuable alternative forgone in order to pursue a particular strategy."},{"title":"Comparative vs Competitive Advantage","content":"A country (or firm) is said to have a comparative advantage if it can produce a good at a lower opportunity cost than another. Competitive advantage is broader — it occurs when an organization acquires or develops an attribute or combination of attributes that allows it to outperform its competitors. These attributes can include access to natural resources, inexpensive power, or access to highly trained and skilled personnel. The 640GB drive example shows competitive advantage on both cost AND value."},{"title":"Porter's Theory (1985)","content":"Michael Porter proposed the theory of competitive advantage in 1985. The theory suggests that states and businesses should pursue policies that create high-quality goods to sell at high prices in the market. Competitive advantage occurs when an organization acquires or develops an attribute or combination of attributes that allows it to outperform its competitors. Porter's Five Forces framework diagnoses industry structure: threat of new entrants, bargaining power of suppliers, bargaining power of buyers, threat of substitutes, and rivalry among competitors."},{"title":"Elements of the Value Chain","content":"When executives choose strategies, an organization's resources and capabilities should be examined alongside consideration of its value chain. A value chain charts the path by which products and services are created and eventually sold to customers. The term 'value chain' reflects the fact that as each step is completed, the product becomes more valuable than at the previous step. Within lumber, value is added when a tree is transformed into usable wooden boards — the boards can be sold for more money than the price of the tree."},{"title":"Primary Activities","content":"There are five primary activities in the value chain: (1) Inbound logistics — the arrival of raw materials. (2) Operations — transforming raw materials into finished products. (3) Outbound logistics — delivering finished products to customers. (4) Marketing and sales — attracting potential customers and convincing them to make purchases (Randy's Donuts is cited as an example of powerful marketing). (5) Service — after-sales support and customer satisfaction."},{"title":"Support Activities","content":"Secondary (support) activities provide important underlying support for primary activities. Firm infrastructure refers to how the firm is organized and managed. Human resource management involves recruitment, training, and compensation of employees — recent research found that firms with stronger HR practices significantly outperform those without. Technology refers to the use of computerization and telecommunications. Procurement involves sourcing of raw materials and inputs."},{"title":"Value Chain vs Supply Chain","content":"A supply chain is a system of people, activities, information, and resources involved in creating a product and moving it to the customer. A supply chain is broader than a value chain — the value chain refers to activities within one firm, while the supply chain captures the entire process of creating and distributing a product, often across several firms. Competition in the 21st century requires using supply chains as a means to create competitive advantages."},{"title":"Best Value Supply Chains","content":"Creating best value supply chains requires four components: (1) Strategic supply chain management — using supply chains to create competitive advantages. (2) Agility — relative capacity to act rapidly in response to dramatic changes in supply and demand; can be achieved using buffers or co-locating with the customer. (3) Adaptability — willingness to reshape supply chains when necessary. (4) Alignment — ensuring that the interests of all firms in the chain are aligned."},{"title":"Walmart's Competitive Advantage","content":"Walmart has used its supply chain as a competitive weapon to gain advantages over peers. Walmart excels in terms of supply chain management that creates cost advantages — driving down costs throughout the chain and passing savings to customers. In contrast, Motorola in 2003 was unable to meet demand for new camera phones because it did not have enough lenses available, illustrating the cost of poor supply chain management."},{"title":"Towards a Dynamic Theory of Strategy","content":"Why firms succeed or fail is the crux of strategy. Porter (1991) argued that firm success depends on: (1) industry structure (analyzed through Five Forces), and (2) firm's relative position within that industry. Sustainable competitive advantage is attainable through low cost or product differentiation. Two main sources of competitive advantage exist: initial conditions (the firm was privileged early on) and managerial choices (superior managerial performance)."},{"title":"Game Theory & Strategic Interaction","content":"Game theory emphasizes strategic interaction between competitors and the central role of timing in decision making. It focuses on firm beliefs about competitors' behavior. However, game theory fails to consider simultaneous choices across multiple variables — it is better thought of as cross-sectional analysis rather than a truly dynamic theory. Commitment under uncertainty (Ghemawat) views strategy as a small number of big, binding decisions made under conditions of uncertainty."},{"title":"Key Takeaway — Unit 3","content":"The value chain provides a useful tool for managers to examine systematically where value may be added to their organizations. Primary activities (inbound logistics, operations, outbound logistics, marketing & sales, service) create direct value. Support activities (infrastructure, HR, technology, procurement) enable primary activities. The supply chain extends this thinking across firms. Porter's Five Forces and competitive advantage theory together explain why some firms consistently outperform others."}],"quiz":[{"q":"Michael Porter proposed the theory of competitive advantage in:","options":["1975","1980","1985","1990"],"answer":2},{"q":"Comparative advantage refers to:","options":["Outperforming competitors in all areas","Producing a good at lower opportunity cost than another country","Having better technology than rivals","Controlling market share"],"answer":1},{"q":"Primary activities in the value chain include:","options":["HR management and technology","Inbound logistics, operations, marketing & sales","Finance and legal services","Management and infrastructure"],"answer":1},{"q":"Inbound logistics refers to:","options":["Shipping products to customers","Arrival of raw materials","After-sales service","Marketing campaigns"],"answer":1},{"q":"Walmart's competitive advantage is primarily from:","options":["Product quality","Supply chain management","Brand recognition","Customer service"],"answer":1},{"q":"Agility in a supply chain refers to:","options":["Being cost efficient","Relative capacity to act rapidly in response to changes","Having multiple suppliers","Reducing inventory"],"answer":1}]},{"id":4,"emoji":"⚔️","title":"Sun Tzu & Strategic Warfare","subtitle":"Art of War applied to business strategy","color":"#EF4444","sections":[{"title":"Introduction","content":"Written in the fifth century B.C., Suntzu and Wutzu still remain the most celebrated works on war in Chinese literature. While the chariot has gone and weapons have changed, these ancient masters have held their own since they deal chiefly with fundamental principles of war and the influence of politics and human nature on military operations. They show in a striking way how unchanging these principles are — applied today in business strategy, negotiation, and competitive positioning worldwide."},{"title":"The Five Indispensable Matters","content":"Sun Tzu identifies five indispensable matters in war: (1) The Way (proper conduct; if the ruling authority is upright, the people are united and fearless). (2) Heaven (Yin and Yang; heat and cold; time and season). (3) Earth (distance, nature, extent, strategic position). (4) The Leader (intelligence, truth, benevolence, courage, and strictness). (5) Law (partition and ordering of troops). To know these is to conquer; to know them not is to be defeated."},{"title":"Preliminary Reckoning","content":"To all nations, War is a great matter. Upon the army death or life depend — it is the means of the existence or destruction of the State. Therefore it must be diligently studied. War is a thing of pretence: when capable of action, pretend disability; when near to the enemy, pretend to be far; when far away, pretend to be near. Allure the enemy by giving him a small advantage. At the reckoning before fighting, victory is to the side that excels in all these matters."},{"title":"Operations of War","content":"The requirements of war demand enormous resources. Even if victorious, if operations continue too long, soldiers' ardour decreases, weapons become worn, and strength disappears. If the war lasts long, the country's means do not suffice. Therefore it is imperative in war not to delay unnecessarily. The supreme art of war is to subdue the enemy without fighting. To win a hundred battles is not the perfection of attainment — the perfection is victory without direct conflict."},{"title":"The Attack by Stratagem","content":"Better than defeating a country by fire and the sword is to take it without strife. Better to capture the enemy's army intact than to overcome it after fierce resistance. The most skilful warrior outwits the enemy by superior stratagem; the next prevents the enemy from uniting forces; next is he who engages the enemy's army in the field; while to besiege a citadel is the worst expedient. Knowing the enemy and knowing yourself — in a hundred battles you will never be in peril."},{"title":"The Order of Battle","content":"The ancient masters of war first made their armies invincible, then waited until the adversary could with certainty be defeated. The causes of defeat come from within; victory is born in the enemy's camp. If victory is unattainable, stand on the defensive; if victory is sure, attack. Deficiency compels defence; super-abundance permits attack. The skilful in defence crouch hidden in the deepest shades; the skilful in attack push to the topmost heights."},{"title":"Emptiness and Strength","content":"To be the first in the field, and there to await the enemy, is to husband strength. To be late, and hurrying to advance, is exhausting. The good fighter contrives to make the enemy approach; he does not allow himself to be beguiled. By offering an apparent advantage, he induces the enemy to take up a position that will cause his defeat. If the enemy is at rest, harass him; if he is living in plenty, cut off his supplies; if awaiting attack, cause him to move."},{"title":"Battle Tactics & The Nine Changes","content":"There is nothing more difficult than Battle Tactics. Their difficulty lies in the calculation of time and distance, and the reversal of misfortune. The Nine Changes — knowing when to avoid certain roads, when not to attack certain forces, when not to besiege certain castles, when not to fight for certain ground — is essential knowledge. A general who knows the Nine Changes understands the true use of troops; one who does not cannot make use of even topographical knowledge."},{"title":"The Sayings of Wutzu","content":"Wutzu's writings cover six main areas: The Government of a Country (how rulers should prepare their nations), Estimation of the Enemy (careful analysis before engaging), Control of the Army (discipline and order), Qualities of the General (wisdom, sincerity, benevolence, courage, and strictness), Suiting the Occasion (adapting tactics to circumstances), and Encouragement of the Troops (maintaining morale through rewards and recognition)."},{"title":"Business Applications of Sun Tzu","content":"Sun Tzu's principles are widely applied in modern business strategy: Know your competition (know the enemy and yourself); Attack where competitors are weakest; Adaptability (change tactics as conditions change); Strategic deception (creating competitive surprises); Speed and initiative (be first in the field); Win without direct conflict (partnerships and acquisitions over ruinous price wars); Intelligence gathering (market research as a form of espionage). Many modern CEOs cite Sun Tzu as a key influence."},{"title":"Sun Tzu's Core Lessons","content":"The supreme art of war is to subdue the enemy without fighting. All warfare is based on deception. Supreme excellence consists in breaking the enemy's resistance without fighting. Let your plans be dark and impenetrable as night; when you move, fall like a thunderbolt. In business terms: compete on unique strengths; make your moves difficult for competitors to predict; always look for ways to win without exhausting your resources; and study both yourself and your competition relentlessly."},{"title":"Key Terms — Unit 4","content":"Essential concepts: The Five Indispensable Matters (Way, Heaven, Earth, Leader, Law), The Seven Matters for comparing with the enemy, Stratagem over brute force, The Nine Changes (adaptive decision-making), Emptiness and Strength (strategic positioning), Attack by Stratagem (winning without fighting), Wutzu's six areas, The Leader's qualities (intelligence, truth, benevolence, courage, strictness), Business applications of ancient military strategy."}],"quiz":[{"q":"Sun Tzu's 'The Art of War' was written in approximately:","options":["2nd century BC","5th century BC","1st century AD","10th century BC"],"answer":1},{"q":"According to Sun Tzu, the five indispensable matters in war are:","options":["Army, Weapons, Tactics, Terrain, Leadership","The Way, Heaven, Earth, The Leader, Law","Strategy, Intelligence, Resources, Morale, Position","Planning, Speed, Deception, Terrain, Command"],"answer":1},{"q":"'The Leader' in Sun Tzu's framework requires:","options":["Physical strength and aggression","Intelligence, truth, benevolence, courage and strictness","Wealth and political connections","Military experience only"],"answer":1},{"q":"Sun Tzu's core principle about war is that it is:","options":["About brute force","A thing of pretence/deception","About having superior numbers","Won by technology"],"answer":1},{"q":"According to Sun Tzu, the supreme art of war is to:","options":["Win every battle","Subdue the enemy without fighting","Attack first","Control the terrain"],"answer":1},{"q":"Wutzu's writings focus on:","options":["Naval warfare only","Government, estimation of enemy, army control, general qualities","Economic policy","Diplomatic relations"],"answer":1}]},{"id":5,"emoji":"🌍","title":"21st Century Strategy","subtitle":"Globalization, innovation & organizational culture","color":"#8B5CF6","sections":[{"title":"21st-Century Strategy Overview","content":"Researchers' interest in strategy has grown recently, focusing on the serious impact of using strategies in organizations. Many organizations now rely on industrial psychology to understand strategic planning. Managers now know that employees are unique and motivated by factors unique to their personalities and beliefs. Understanding a firm's culture and what motivates employees allows strategic managers to extract more productivity. Three main themes emerge: innovation as a strategic lever, globalization, and the importance of organizational culture."},{"title":"Globalization and Strategy","content":"Globalization encourages the world to recognize the importance of the global economy. Organizational leaders must now think beyond national borders in their strategic planning. Globalization affects strategy by: expanding available markets beyond domestic limits; increasing competition from foreign firms; allowing access to global supply chains; creating opportunities for international partnerships; and requiring sensitivity to diverse cultural norms and legal frameworks. The history of globalization can be traced through key economic and technological developments."},{"title":"The Innovator's Dilemma","content":"The idea of innovation as a strategic leader has complemented the competitive advantage strategy. There are serious issues with getting to the top of an industry by innovating and then falling behind newer innovators. This is the Innovator's Dilemma — successful companies often fail to adopt disruptive innovations because doing so threatens their existing business model. Companies that are most profitable today may not survive tomorrow if they cannot adapt to new technological paradigms. Clayton Christensen popularized this concept."},{"title":"Organizational Culture Defined","content":"Organizational culture can be defined as the collective behavior of people within an organization and the meanings behind their actions. Culture is inherently intangible. One way to define culture is as the overarching mentality and expectation of behavior within the context of a given group. Corporate culture is usually derived from the top down (upper management sets the tone) and comes in the form of expectation and consistency throughout the organization. All employees and managers must uphold cultural expectations."},{"title":"Culture and Adaptability","content":"Culture can be manipulated and altered, depending on leadership and members. A car dealership example illustrates this: the owner may hire specifically for competitiveness, create high variable salary and low fixed salary so that high performers are much more highly prized, and give awards to the most successful salesperson each quarter. Instilling positive culture that promotes effective employee behavior is a manager's primary task. Culture change requires consistent reinforcement from leadership behavior."},{"title":"Hofstede's Cultural Dimensions Theory","content":"Hofstede's Cultural Dimensions Theory postulates that cultural differences to be aware of include: power distance (how much less powerful members accept unequal power distribution), masculinity vs. femininity (competition vs. cooperation), individualism vs. collectivism (personal achievement vs. group harmony), uncertainty avoidance (comfort with ambiguity), long-term vs. short-term orientation, and indulgence vs. restraint. These dimensions help managers understand and work across cultural differences."},{"title":"Schein's and Johnson's Cultural Models","content":"Edgar Schein's Cognitive Levels of Organizational Culture views culture via three levels: artifacts (easily visible — facilities, dress code, etc.), values (harder to see — mission statements, ethical guidelines), and basic underlying assumptions (invisible but deeply ingrained beliefs). Gerry Johnson's Cultural Web includes: the paradigm (core beliefs), control system, organizational structure, power structures, rituals and routines, stories told within the organization, and symbols."},{"title":"MacGregor's Theory X","content":"Theory X is a traditional management style predicated on the assumption that external rewards, punishments, and supervision are effective ways to manage employees. The core assumption is that employees won't have the intrinsic motivations required to accomplish objectives on their own. Therefore, a system of external motivators must be in place. This can be implemented through active supervision, punishment systems, or the offering of financial rewards. Theory X sees work as inherently undesirable to employees."},{"title":"MacGregor's Theory Y","content":"Theory Y focuses on the internal mechanisms of motivation, assuming that employees have a natural drive to contribute, take ownership of their work, and pursue organizational goals. While Theory Y may seem optimal, it has drawbacks — through empowering everyone towards autonomy, it can be easy to lose organizational alignment. Strong organizational objectives and processes are still needed. Theory Y assumes work can be as natural as play when conditions are right. The balance between X and Y depends on context."},{"title":"Diversity and Inclusion in Strategy","content":"The diverse culture around the world is dramatically changing how we conduct business. Organizations must develop strategies that account for a diverse global workforce. Diversity and inclusion initiatives are increasingly becoming part of competitive strategy — firms that leverage diverse perspectives often achieve greater innovation. Organizations that fail to adapt their cultures to be inclusive risk losing talent and market relevance in a globalized economy. Google and Microsoft acquisitions exemplify diversity-based strategic growth."},{"title":"Technology and 21st Century Strategy","content":"Technology is reshaping competitive landscapes at unprecedented speed. Digital transformation requires strategic responses: cloud computing changes cost structures; AI and automation reshape workforce requirements; platform businesses create winner-take-all dynamics; data becomes a core strategic asset. Many organizations rely on psychology, specifically industrial psychology, to understand strategic planning in this era. The key challenge is choosing the best alternative strategy under technological uncertainty."},{"title":"Key Terms — Unit 5","content":"Essential concepts: Innovator's Dilemma (disruption by newer innovators), Theory X (external motivation, supervision) vs Theory Y (internal motivation, autonomy), Hofstede's Cultural Dimensions (power distance, masculinity, individualism, uncertainty avoidance), Schein's Three Levels (artifacts, values, assumptions), Gerry Johnson's Cultural Web, Globalization effects on strategy, Organizational culture (collective behavior), Corporate culture (top-down), Diversity and inclusion as strategic assets, Technology as a strategic driver."}],"quiz":[{"q":"Theory X assumes that employees:","options":["Are naturally motivated","Need external rewards, punishments and supervision","Can self-manage effectively","Prefer autonomy"],"answer":1},{"q":"Theory Y focuses on:","options":["External motivators","Internal mechanisms of motivation and autonomy","Strict supervision","Financial incentives only"],"answer":1},{"q":"Hofstede's Cultural Dimensions Theory includes:","options":["Mission, Vision, Values","Power distance, masculinity, individualism perspectives","Theory X and Theory Y","Value chain analysis"],"answer":1},{"q":"The 'Innovator's Dilemma' refers to:","options":["How to fund innovation","Getting to the top by innovating then falling behind newer innovators","Choosing between products","Managing innovation teams"],"answer":1},{"q":"Corporate culture is primarily derived from:","options":["Bottom-up employee initiatives","Top down from upper management","Customer feedback","Government regulations"],"answer":1},{"q":"Globalization primarily encourages organizations to:","options":["Focus only on local markets","Recognize the importance of the global economy","Reduce innovation","Standardize all products"],"answer":1}]}];
 
-let state=JSON.parse(localStorage.getItem('bus500v2')||'{}');
-state.sectionsRead=state.sectionsRead||{};
-state.quizScores=state.quizScores||{};
-state.totalMinutes=state.totalMinutes||0;
-state.history=state.history||[];
-state.streak=state.streak||0;
-state.lastStudyDate=state.lastStudyDate||null;
+// ── State ──
+let state = { sectionsRead:{}, quizScores:{}, totalMinutes:0, history:[], streak:0, lastStudyDate:null };
+let currentUser = null;
+let saveTimeout = null;
 
 let currentUnit=null,currentSection=0,quizUnit=null,quizIndex=0,quizAnswers=[],quizAnswered=false;
 let timerInterval=null,timerSeconds=1800,timerRunning=false;
 
-function save(){localStorage.setItem('bus500v2',JSON.stringify(state));}
+// ── Persist ──
+function save(){
+  localStorage.setItem('bus500v2', JSON.stringify(state));
+  if(currentUser){
+    clearTimeout(saveTimeout);
+    saveTimeout=setTimeout(async()=>{
+      try{
+        await db.collection('users').doc(currentUser.uid).set({bus500:state},{merge:true});
+      }catch(e){console.warn('Firestore save failed',e);}
+    },1500);
+  }
+}
+
+async function loadFromFirestore(){
+  try{
+    const doc=await db.collection('users').doc(currentUser.uid).get();
+    if(doc.exists && doc.data().bus500){
+      state={...state,...doc.data().bus500};
+      localStorage.setItem('bus500v2',JSON.stringify(state));
+    } else {
+      // First sign-in — migrate local progress to cloud
+      const local=localStorage.getItem('bus500v2');
+      if(local){ state={...state,...JSON.parse(local)}; await db.collection('users').doc(currentUser.uid).set({bus500:state},{merge:true}); }
+    }
+  }catch(e){
+    console.warn('Firestore load failed, using localStorage',e);
+    const local=localStorage.getItem('bus500v2');
+    if(local) state={...state,...JSON.parse(local)};
+  }
+}
+
+// ── Auth helpers ──
+function authTab(tab){
+  document.getElementById('panel-signin').style.display=tab==='signin'?'':'none';
+  document.getElementById('panel-signup').style.display=tab==='signup'?'':'none';
+  document.getElementById('tab-signin').classList.toggle('active',tab==='signin');
+  document.getElementById('tab-signup').classList.toggle('active',tab==='signup');
+  hideAuthMsg();
+}
+function showAuthMsg(msg,isOk){
+  const el=document.getElementById('auth-msg');
+  el.className=isOk?'auth-ok':'auth-err';
+  el.textContent=msg; el.style.display='';
+}
+function hideAuthMsg(){ document.getElementById('auth-msg').style.display='none'; }
+function fbErr(code){
+  return({'auth/user-not-found':'No account found with that email.','auth/wrong-password':'Incorrect password. Try again.','auth/invalid-credential':'Incorrect email or password.','auth/email-already-in-use':'An account with this email already exists.','auth/invalid-email':'Please enter a valid email address.','auth/weak-password':'Password should be at least 6 characters.','auth/too-many-requests':'Too many attempts. Please wait a moment.'}[code]||'Something went wrong. Please try again.');
+}
+async function doSignIn(){
+  const email=document.getElementById('si-email').value.trim();
+  const pass=document.getElementById('si-pass').value;
+  if(!email||!pass){showAuthMsg('Please enter your email and password.');return;}
+  try{ await auth.signInWithEmailAndPassword(email,pass); }
+  catch(e){ showAuthMsg(fbErr(e.code)); }
+}
+async function doSignUp(){
+  const email=document.getElementById('su-email').value.trim();
+  const pass=document.getElementById('su-pass').value;
+  if(!email||!pass){showAuthMsg('Please fill in all fields.');return;}
+  if(pass.length<6){showAuthMsg('Password must be at least 6 characters.');return;}
+  try{ await auth.createUserWithEmailAndPassword(email,pass); }
+  catch(e){ showAuthMsg(fbErr(e.code)); }
+}
+async function doSignOut(){
+  clearInterval(timerInterval); timerRunning=false;
+  await auth.signOut();
+}
+async function forgotPassword(){
+  const email=document.getElementById('si-email').value.trim();
+  if(!email){showAuthMsg('Enter your email above first.');return;}
+  try{
+    await auth.sendPasswordResetEmail(email);
+    showAuthMsg('Reset email sent — check your inbox!',true);
+  }catch(e){ showAuthMsg(fbErr(e.code)); }
+}
+
+// ── Auth state listener ──
+auth.onAuthStateChanged(async(user)=>{
+  const overlay=document.getElementById('auth-overlay');
+  if(user){
+    currentUser=user;
+    overlay.style.display='none';
+    document.getElementById('user-avatar').textContent=user.email[0].toUpperCase();
+    await loadFromFirestore();
+    updateStreak();
+    renderDashboard();
+    renderHome();
+    renderTracker();
+    updateTimerDisplay();
+    showPage('dashboard');
+  } else {
+    currentUser=null;
+    overlay.style.display='flex';
+  }
+});
+
+// ── Dashboard ──
+function renderDashboard(){
+  let totalSec=0,readSec=0,quizzesDone=0;
+  UNITS.forEach(u=>{
+    totalSec+=u.sections.length;
+    readSec+=(state.sectionsRead[u.id]||[]).length;
+    if(state.quizScores[u.id]!==undefined) quizzesDone++;
+  });
+  const overallPct=totalSec?Math.round((readSec/totalSec)*100):0;
+  document.getElementById('dash-overall').textContent=overallPct+'%';
+  document.getElementById('dash-quizzes').textContent=quizzesDone+'/5';
+  document.getElementById('dash-mins').textContent=state.totalMinutes||0;
+  const hour=new Date().getHours();
+  const greet=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
+  document.getElementById('dash-greeting').textContent=`${greet}! Track every course, quiz, and session on your MBA journey.`;
+  const grid=document.getElementById('course-grid');
+  grid.innerHTML='';
+  COURSES.forEach(course=>{
+    const card=document.createElement('div');
+    card.className='course-card'+(course.hasContent?'':' soon');
+    let pct=0,quizAvg='—';
+    if(course.id==='bus500'){
+      pct=overallPct;
+      const scores=Object.values(state.quizScores);
+      quizAvg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)+'%':'—';
+    }
+    card.innerHTML=`<div class="course-emoji">${course.emoji}</div>
+      <div class="course-code">${course.code}</div>
+      <div class="course-name">${course.title}</div>
+      <div class="course-semester">${course.semester}</div>
+      ${course.hasContent
+        ?`<div class="course-pct" style="color:${course.color}">${pct}%</div>
+           <div style="font-size:11px;color:var(--text2);margin-top:2px">Quiz avg: ${quizAvg}</div>
+           <div class="course-bar"><div class="course-bar-fill" style="width:${pct}%;background:${course.color}"></div></div>`
+        :`<div class="soon-badge">Coming Soon</div>
+           <div style="font-size:12px;color:var(--text3);margin-top:4px">Content not yet added</div>`}`;
+    card.onclick=course.hasContent?()=>showPage('home'):()=>toast('📚 '+course.code+' content coming soon!');
+    grid.appendChild(card);
+  });
+}
 
 function updateStreak(){
   const today=new Date().toDateString();
@@ -278,6 +515,7 @@ function showPage(id){
   document.getElementById('page-'+id).classList.add('active');
   const nb=document.getElementById('nav-'+id);
   if(nb)nb.classList.add('active');
+  if(id==='dashboard')renderDashboard();
   if(id==='home')renderHome();
   if(id==='tracker')renderTracker();
 }
@@ -563,7 +801,7 @@ function toast(msg){
   setTimeout(()=>t.remove(),3500);
 }
 
-updateStreak();renderHome();updateTimerDisplay();
+// Startup handled by auth.onAuthStateChanged above
 </script>
 </body>
 </html>
